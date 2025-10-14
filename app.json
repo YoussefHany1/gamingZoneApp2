@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "GamingZone",
+    "slug": "GamingZone",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0c1a33"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0c1a33"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.yh.gamingzone",
+      "googleServicesFile": "./google-services.json"
+    },
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#0c1a33",
+      "androidMode": "default",
+      "androidCollapsedTitle": "#{unread_notifications} new interactions"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5c13a973-4e34-44a7-8866-10891377353e"
+      }
+    }
+  }
+}

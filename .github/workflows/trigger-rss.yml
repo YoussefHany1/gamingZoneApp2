@@ -1,0 +1,15 @@
+name: Trigger RSS Fetch
+on:
+  schedule:
+    - cron: "*/5 * * * *" # every 5 minutes
+  workflow_dispatch:
+
+jobs:
+  call:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call fetchNow
+        env:
+          RSS_SECRET: ${{ secrets.RSS_SECRET }}
+        run: |
+          curl -s -o /dev/null -w "%{http_code}\n" -H "x-rss-secret: $RSS_SECRET" "https://us-central1-gaming-zone-ca485.cloudfunctions.net/fetchNow"

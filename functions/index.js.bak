@@ -1,0 +1,249 @@
+// Firebase Functions: RSS polling and manual refresh
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+const axios = require("axios");
+const xml2js = require("xml2js");
+
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
+const db = admin.firestore();
+const FEEDS_COLLECTION = "rss";
+
+async function fetchRssItems(url) {
+  const response = await axios.get(url);
+  const xml = response.data;
+  return new Promise((resolve, reject) => {
+    xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      const channel = result.rss?.channel?.[0];
+      const items = channel?.item || [];
+      resolve({ channel, items });
+    });
+  });
+}
+
+function computeNewItems(items, lastTitlesSet, limit = 5) {
+  const latest = items.slice(0, limit);
+  if (!lastTitlesSet) return latest;
+  return latest.filter((item) => {
+    const title = item.title?.[0];
+    return title && !lastTitlesSet.has(title);
+  });
+}
+
+async function updateFeedDoc(url, category, name, items) {
+  const docRef = db.collection(FEEDS_COLLECTION).doc(encodeURIComponent(url));
+  const latestTitles = items.slice(0, 5).map((i) => i.title?.[0] || "");
+  await docRef.set(
+    {
+      url,
+      category,
+      name,
+      latestTitles,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+// Same feeds list as server.js
+const rssFeeds = [
+  {
+    url: "https://www.gameinformer.com/rss.xml",
+    category: "news",
+    name: "Game Informer",
+  },
+  {
+    url: "https://www.destructoid.com/feed/",
+    category: "news",
+    name: "Destructoid",
+  },
+  { url: "https://www.vg247.com/feed/news", category: "news", name: "VG247" },
+  {
+    url: "https://feeds.feedburner.com/ign/news",
+    category: "news",
+    name: "IGN",
+  },
+  {
+    url: "https://www.gamespot.com/feeds/game-news",
+    category: "news",
+    name: "GameSpot",
+  },
+  {
+    url: "https://www.eurogamer.net/feed/news",
+    category: "news",
+    name: "Eurogamer",
+  },
+  {
+    url: "https://gamerant.com/feed/gaming/",
+    category: "news",
+    name: "Game Rant",
+  },
+  {
+    url: "https://www.saudigamer.com/feed/",
+    category: "news",
+    name: "Saudi Gamer",
+  },
+  {
+    url: "https://gamesmix.net/category/news/feed/",
+    category: "news",
+    name: "Games Mix",
+  },
+  {
+    url: "https://feeds.feedburner.com/arabhardware",
+    category: "news",
+    name: "Arab Hardware",
+  },
+  {
+    url: "https://www.true-gaming.net/home/category/gaming-news/feed/",
+    category: "news",
+    name: "True Gaming",
+  },
+  {
+    url: "https://www.gameinformer.com/reviews.xml",
+    category: "reviews",
+    name: "Game Informer",
+  },
+  {
+    url: "https://www.vg247.com/feed/reviews",
+    category: "reviews",
+    name: "VG247",
+  },
+  {
+    url: "https://www.gamespot.com/feeds/reviews",
+    category: "reviews",
+    name: "GameSpot",
+  },
+  {
+    url: "https://www.eurogamer.net/feed/reviews",
+    category: "reviews",
+    name: "Eurogamer",
+  },
+  {
+    url: "https://gamesmix.net/category/reviews/feed/",
+    category: "reviews",
+    name: "Games Mix",
+  },
+  {
+    url: "https://www.true-gaming.net/home/category/games-list/feed/",
+    category: "reviews",
+    name: "True Gaming",
+  },
+  {
+    url: "https://www.tomshardware.com/feeds.xml",
+    category: "hardware",
+    name: "Tom's Hardware",
+  },
+  {
+    url: "https://www.anandtech.com/rss/",
+    category: "hardware",
+    name: "AnandTech",
+  },
+  {
+    url: "https://www.techpowerup.com/rss/news",
+    category: "hardware",
+    name: "TechPowerUp",
+  },
+  {
+    url: "https://www.guru3d.com/rss.xml",
+    category: "hardware",
+    name: "Guru3D",
+  },
+  {
+    url: "https://videocardz.com/rss-feed",
+    category: "hardware",
+    name: "VideoCardz",
+  },
+  {
+    url: "https://gamesmix.net/category/hardware/feed/",
+    category: "hardware",
+    name: "Games Mix",
+  },
+];
+
+exports.pollFeeds = functions
+  .region("us-central1")
+  .pubsub.schedule("every 5 minutes")
+  .timeZone("UTC")
+  .onRun(async () => {
+    for (const feed of rssFeeds) {
+      try {
+        const { items } = await fetchRssItems(feed.url);
+        const docRef = db
+          .collection(FEEDS_COLLECTION)
+          .doc(encodeURIComponent(feed.url));
+        const snapshot = await docRef.get();
+        const lastTitles = snapshot.exists
+          ? snapshot.data().latestTitles || []
+          : [];
+        const lastTitlesSet = new Set(lastTitles);
+        const newItems = computeNewItems(items, lastTitlesSet, 5);
+
+        await updateFeedDoc(feed.url, feed.category, feed.name, items);
+
+        if (newItems.length > 0) {
+          console.log(
+            `New ${feed.category} items from ${feed.name}: ${newItems.length}`
+          );
+        }
+        await new Promise((r) => setTimeout(r, 300));
+      } catch (e) {
+        console.error(`Failed to poll ${feed.name}:`, e.message);
+      }
+    }
+    return null;
+  });
+
+exports.refreshFeed = functions
+  .region("us-central1")
+  .https.onRequest(async (req, res) => {
+    const url = req.query.url;
+    if (!url) {
+      res.status(400).json({ error: "Missing url" });
+      return;
+    }
+    try {
+      const { items } = await fetchRssItems(url);
+      const docRef = db
+        .collection(FEEDS_COLLECTION)
+        .doc(encodeURIComponent(url));
+      const snapshot = await docRef.get();
+      const lastTitles = snapshot.exists
+        ? snapshot.data().latestTitles || []
+        : [];
+      const lastTitlesSet = new Set(lastTitles);
+      const newItems = computeNewItems(items, lastTitlesSet, 5);
+
+      await updateFeedDoc(
+        url,
+        snapshot.data()?.category || null,
+        snapshot.data()?.name || null,
+        items
+      );
+
+      res.json({ items, newCount: newItems.length });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+exports.getFeed = functions
+  .region("us-central1")
+  .https.onRequest(async (req, res) => {
+    const url = req.query.url;
+    if (!url) {
+      res.status(400).json({ error: "Missing url" });
+      return;
+    }
+    try {
+      const { items } = await fetchRssItems(url);
+      res.json({ items });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
