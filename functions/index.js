@@ -144,7 +144,7 @@ function extractSourcesFromDocData(data) {
 }
 
 // ===================== runFetchAll =====================
-async function runFetchAll({ concurrency = 6, batchSize = 400 } = {}) {
+async function runFetchAll({ concurrency = 4, batchSize = 400 } = {}) {
   const summary = {
     sourcesProcessed: 0,
     sourcesSkipped: 0,
