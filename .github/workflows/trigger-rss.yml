@@ -36,4 +36,4 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           RSS_SECRET: ${{ secrets.RSS_SECRET }} # optional
         run: |
-          node scripts/fetchRss.js
+          node scripts/fetchRss.cjs
