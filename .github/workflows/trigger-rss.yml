@@ -26,9 +26,9 @@ jobs:
         env:
           SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          echo "$SA_JSON" > service-account.json
+          echo "$SA_JSON" > serviceAccountKey.json
           # optional: show a small check
-          echo "Service account written, size:" $(wc -c service-account.json)
+          echo "Service account written, size:" $(wc -c serviceAccountKey.json)
 
       - name: Run RSS fetch script
         env:
