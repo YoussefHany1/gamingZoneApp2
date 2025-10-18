@@ -121,43 +121,48 @@ function normalizeItems(parsed) {
   return items.filter((it) => it.link || it.guid);
 }
 
+// --- helper: sanitize string to be firestore-safe id (lowercase, alnum, _ and -) ---
+function safeId(input) {
+  if (!input) return null;
+  return String(input)
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_\-]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^\_+|\_+$/g, "");
+}
+
 // extract grouped sources similar to your 'rss' docs support
+// Now returns array of objects: { source: <siteObj>, category: <key|null> }
 function extractSourcesFromDocData(data) {
   const result = [];
   if (Array.isArray(data)) {
     for (const entry of data) {
-      if (
-        entry &&
-        typeof entry === "object" &&
-        !Array.isArray(entry) &&
-        Object.keys(entry).length === 1 &&
-        Array.isArray(Object.values(entry)[0])
-      ) {
-        const arr = Object.values(entry)[0];
-        for (const s of arr) result.push(s);
-      } else {
-        result.push(entry);
-      }
+      // array items: no category context available
+      result.push({ source: entry, category: null });
     }
     return result;
   }
   if (data && typeof data === "object") {
-    if (Array.isArray(data.sources)) return data.sources.slice();
-    if (Array.isArray(data.sites)) return data.sites.slice();
+    if (Array.isArray(data.sources))
+      return data.sources.map((s) => ({ source: s, category: "sources" }));
+    if (Array.isArray(data.sites))
+      return data.sites.map((s) => ({ source: s, category: "sites" }));
     for (const key of Object.keys(data)) {
       const val = data[key];
       if (Array.isArray(val)) {
-        for (const s of val) result.push(s);
+        for (const s of val) result.push({ source: s, category: key });
       } else if (
         val &&
         typeof val === "object" &&
         (val.name || val.url || val.rssUrl)
       ) {
-        result.push(val);
+        result.push({ source: val, category: key });
       }
     }
     if (result.length === 0 && (data.name || data.url || data.rssUrl))
-      result.push(data);
+      result.push({ source: data, category: null });
     return result;
   }
   return result;
@@ -173,7 +178,9 @@ async function runFetchAll({ concurrency = 4, batchSize = 400 } = {}) {
       snap.forEach((doc) => {
         const data = doc.data();
         const extracted = extractSourcesFromDocData(data);
-        for (const s of extracted) {
+        for (const e of extracted) {
+          const s = e.source || e; // backward compat if structure differs
+          const category = e.category || null;
           const rssUrl = s.rssUrl || s.url || s.feed || s.link || null;
           if (!rssUrl) continue;
           sources.push({
@@ -184,6 +191,7 @@ async function runFetchAll({ concurrency = 4, batchSize = 400 } = {}) {
             language: s.language || null,
             image: s.image || null,
             raw: s,
+            category, // new
           });
         }
       });
@@ -210,15 +218,27 @@ async function runFetchAll({ concurrency = 4, batchSize = 400 } = {}) {
         const items = normalizeItems(parsed);
         if (!items.length) continue;
 
+        // compute sanitized category and siteName to use in path
+        const rawCategory = site.category || null;
+        const categorySanitized = safeId(rawCategory) || "uncategorized";
+
+        // siteName: prefer explicit name, fallback to id
+        const siteNameCandidate =
+          site.name ||
+          (site.raw && (site.raw.name || site.raw.title)) ||
+          site.id;
+        const siteNameSanitized =
+          safeId(siteNameCandidate) || site.id || sha1(site.rssUrl);
+
         for (let sindex = 0; sindex < items.length; sindex += batchSize) {
           const chunk = items.slice(sindex, sindex + batchSize);
           const batch = db.batch();
           for (const it of chunk) {
             const docId = sha1(it.guid || it.link || it.title);
             const docRef = db
-              .collection("sites")
-              .doc(site.id)
               .collection("articles")
+              .doc(categorySanitized)
+              .collection(siteNameSanitized)
               .doc(docId);
             batch.set(
               docRef,
@@ -234,6 +254,7 @@ async function runFetchAll({ concurrency = 4, batchSize = 400 } = {}) {
                 siteName: site.name || null,
                 siteImage: site.image || null,
                 language: site.language || null,
+                category: rawCategory || null, // store original category if present
               },
               { merge: true }
             );
@@ -272,7 +293,7 @@ async function runFetchAll({ concurrency = 4, batchSize = 400 } = {}) {
 // run immediately
 runFetchAll()
   .then(() => process.exit(0))
-  .catch((e) => {
-    console.error("Fatal error:", e);
+  .catch((error) => {
+    console.error("Fatal error:", error);
     process.exit(1);
   });
