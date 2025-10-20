@@ -93,7 +93,7 @@ function normalizeItems(parsed) {
       )?.[1];
       const thumbnail =
         i.thumbnail ||
-        i.thumbnail?.[0] ||
+        // i.thumbnail?.[0] ||
         i.image ||
         i.enclosure?.[0]?.["url"]?.[0] ||
         i.enclosure?.[0]?.link ||
@@ -130,10 +130,7 @@ function normalizeItems(parsed) {
             (typeof i.link === "string" ? i.link : null);
         }
       }
-      const title =
-        (i.title &&
-          (typeof i.title === "object" ? i.title._ || i.title : i.title)) ||
-        "";
+      const title = i.title || "N/A";
       const description =
         he
           .decode(he.decode(striptags(String(i.description))))
@@ -147,11 +144,14 @@ function normalizeItems(parsed) {
       )?.[1];
       const thumbnail =
         i.thumbnail ||
-        i.thumbnail?.[0] ||
+        // i.thumbnail?.[0] ||
         i.image ||
         i.enclosure?.[0]?.["url"]?.[0] ||
-        i.enclosure?.[0]?.link ||
-        i["media:thumbnail"]?.[0] ||
+        i.enclosure?.link ||
+        (Array.isArray(i.enclosure)
+          ? i.enclosure[0]?.url || i.enclosure[0]?.link
+          : null);
+      i["media:thumbnail"]?.[0] ||
         i["media:content"]?.[0]?.["url"]?.[0] ||
         descriptionImage ||
         null;
