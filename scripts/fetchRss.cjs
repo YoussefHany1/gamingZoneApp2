@@ -8,9 +8,8 @@ const admin = require("firebase-admin");
 const axios = require("axios");
 const xml2js = require("xml2js");
 const crypto = require("crypto");
-const fs = require("fs");
-const path = require("path");
 const striptags = require("striptags");
+const he = require("he");
 // If you prefer to pass the service account JSON via env var SERVICE_ACCOUNT,
 // try to parse it, otherwise fallback to local file (as original).
 let serviceAccount = null;
@@ -51,7 +50,9 @@ function sha1(input) {
 async function fetchRss(url) {
   const res = await axios.get(url, {
     timeout: 20000,
-    headers: { "User-Agent": "RSS-Fetcher/1.0 (+your-email-or-site)" },
+    headers: {
+      "User-Agent": "RSS-Fetcher/1.0 (+mailto:youssefhany.2005.yh@gmail.com)",
+    },
   });
   return parser.parseStringPromise(res.data);
 }
@@ -65,98 +66,6 @@ function safeId(input) {
     .replace(/[^a-z0-9_\-]/g, "_")
     .replace(/_+/g, "_")
     .replace(/^\_+|\_+$/g, "");
-}
-
-// helper: attempt to extract an image URL from a string of HTML
-function extractFirstImgFromHtml(html) {
-  if (!html || typeof html !== "string") return null;
-  const match = html.match(/<img[^>]+src=(?:'|")([^'"]+)(?:'|")/i);
-  return match ? match[1] : null;
-}
-
-// extract thumbnail candidate from an RSS/Atom item 'i'
-// handles various shapes: media:thumbnail, media:content, enclosure, link rel=enclosure, first img in description/content
-function extractThumbnailFromItem(i) {
-  if (!i) return null;
-
-  // 1) media:thumbnail or media:content (common with media RSS)
-  if (i["media:thumbnail"]) {
-    // could be { url: '...' } or array
-    const t = i["media:thumbnail"];
-    if (Array.isArray(t) && t.length) {
-      if (t[0].url) return t[0].url;
-      if (typeof t[0] === "string") return t[0];
-    } else if (t.url) return t.url;
-    else if (typeof t === "string") return t;
-  }
-  if (i["media:content"]) {
-    const t = i["media:content"];
-    if (Array.isArray(t) && t.length) {
-      if (t[0].url) return t[0].url;
-      if (typeof t[0] === "string") return t[0];
-    } else if (t.url) return t.url;
-    else if (typeof t === "string") return t;
-  }
-
-  // 2) enclosure (rss <enclosure url="..." type="image/...">)
-  if (i.enclosure) {
-    const enc = i.enclosure;
-    if (Array.isArray(enc)) {
-      for (const e of enc) {
-        if (e && e.url && (!e.type || e.type.startsWith("image/")))
-          return e.url;
-      }
-    } else {
-      if (enc.url && (!enc.type || enc.type.startsWith("image/")))
-        return enc.url;
-    }
-  }
-
-  // 3) atom-style link elements: i.link may be array or object. look for rel=enclosure or type image/*
-  if (i.link) {
-    if (Array.isArray(i.link)) {
-      for (const l of i.link) {
-        try {
-          if (
-            (l.rel && l.rel === "enclosure") ||
-            (l.type && l.type.startsWith && l.type.startsWith("image/"))
-          ) {
-            if (l.href) return l.href;
-            if (typeof l === "string") return l;
-          }
-        } catch (e) {}
-      }
-    } else {
-      // object or string
-      if (typeof i.link === "object") {
-        if (
-          (i.link.rel && i.link.rel === "enclosure") ||
-          (i.link.type &&
-            typeof i.link.type === "string" &&
-            i.link.type.startsWith("image/"))
-        ) {
-          if (i.link.href) return i.link.href;
-          if (i.link._) return i.link._;
-        }
-      } else if (typeof i.link === "string") {
-        // sometimes link is just a string -> not an image though
-      }
-    }
-  }
-
-  // 4) try known alternate fields in feed entries (e.g., 'image', 'thumbnail', 'logo')
-  if (i.thumbnail && typeof i.thumbnail === "string") return i.thumbnail;
-  if (i.image && typeof i.image === "string") return i.image;
-  if (i.logo && typeof i.logo === "string") return i.logo;
-
-  // 5) finally, parse html in description/summary/content to find first <img>
-  const possibleHtml =
-    i.description || i.content || i.summary || i["content:encoded"] || "";
-  const found = extractFirstImgFromHtml(possibleHtml);
-  if (found) return found;
-
-  // nothing found
-  return null;
 }
 
 function normalizeItems(parsed) {
@@ -174,18 +83,11 @@ function normalizeItems(parsed) {
         (i.title &&
           (typeof i.title === "object" ? i.title._ || i.title : i.title)) ||
         "";
-      // const description = i.description || i.summary || i.content || "";
-      const description = striptags(String(i.description))
-        .replace(/\s+/g, " ")
-        .trim();
+      const description =
+        striptags(String(i.description)).replace(/\s+/g, " ").trim() ||
+        i.content ||
+        "";
       const pubDate = i.pubDate || i.pubdate || i["dc:date"] || null;
-      // const guid =
-      //   (i.guid &&
-      //     (typeof i.guid === "string" ? i.guid : i.guid._ || i.guid)) ||
-      //   link;
-
-      // extract thumbnail
-      // const thumbnail = extractThumbnailFromItem(i);
       const descriptionImage = String(i.description).match(
         /<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i
       )?.[1];
@@ -205,7 +107,6 @@ function normalizeItems(parsed) {
         link,
         description,
         pubDate: pubDate ? new Date(pubDate) : null,
-        // guid,
         thumbnail,
         raw: i,
       });
@@ -233,22 +134,33 @@ function normalizeItems(parsed) {
         (i.title &&
           (typeof i.title === "object" ? i.title._ || i.title : i.title)) ||
         "";
-      const description = i.summary || i.content || "";
-      const pubDate = i.published || i.updated || null;
-      const guid = i.id || link;
-
-      // extract thumbnail for atom entries too
-      const thumbnail = extractThumbnailFromItem(i);
+      const description =
+        he
+          .decode(striptags(String(i.description)))
+          .replace(/\s+/g, " ")
+          .trim() ||
+        i.content ||
+        "";
+      const pubDate = i.pubDate || i.pubdate || i["dc:date"] || null;
+      const descriptionImage = String(i.description).match(
+        /<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i
+      )?.[1];
+      const thumbnail =
+        i.thumbnail ||
+        i.thumbnail?.[0] ||
+        i.image ||
+        i.enclosure?.[0]?.["url"]?.[0] ||
+        i.enclosure?.[0]?.link ||
+        i["media:thumbnail"]?.[0] ||
+        i["media:content"]?.[0]?.["url"]?.[0] ||
+        descriptionImage ||
+        null;
 
       items.push({
         title,
         link,
-        description:
-          typeof description === "object"
-            ? description._ || ""
-            : description || "",
+        description,
         pubDate: pubDate ? new Date(pubDate) : null,
-        guid,
         thumbnail,
         raw: i,
       });

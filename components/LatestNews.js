@@ -20,7 +20,6 @@ function fromSnakeCase(input) {
 }
 
 function LatestNews(props) {
-  // const rssUrl = props.rssUrl;
   const limit = props.limit;
   const language = props.language;
   const category = props.category;
@@ -33,18 +32,17 @@ function LatestNews(props) {
   const listData =
     typeof limit === "number" ? articles.slice(0, limit) : articles;
   const renderItem = ({ item }) => {
-    const description = String(item.description).match(
-      /<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i
-    )?.[1];
+    // const description = String(item.description).match(
+    //   /<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i
+    // )?.[1];
     // String(item.content).match(
     //   /<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i
     // );
-    const descriptionImage = description?.[1];
+    // const descriptionImage = description?.[1];
     // console.log("descriptionImage:", item["media:content"]?.[0]?.["url"]?.[0]);
-    const cleanDescription = striptags(String(item.description))
-      .replace(/\s+/g, " ")
-      .trim();
-    console.log("cleanDescription:", description);
+    // const cleanDescription = striptags(String(item.description))
+    //   .replace(/\s+/g, " ")
+    //   .trim();
     return (
       <Pressable
         style={styles.NewsContainer}
@@ -56,31 +54,15 @@ function LatestNews(props) {
       >
         <View style={styles.textContainer}>
           <Text style={styles.headline}>{item.title.substring(0, 100)}</Text>
-          <Text style={styles.par}>{cleanDescription.substring(0, 60)}..</Text>
+          <Text style={styles.par}>{item.description.substring(0, 60)}..</Text>
         </View>
 
         <View>
           <Image
             style={styles.thumbnail}
             source={
-              item.thumbnail ||
-              // item.thumbnail?.[0] ||
-              // item.image ||
-              // item.enclosure?.[0]?.["url"]?.[0] ||
-              // item.enclosure?.[0]?.link ||
-              // item["media:thumbnail"]?.[0] ||
-              // item["media:content"]?.[0]?.["url"]?.[0] ||
-              descriptionImage
-                ? {
-                    uri: item.thumbnail,
-                    //     item.thumbnail?.[0] ||
-                    //     item.image ||
-                    //     item.enclosure?.[0]?.["url"]?.[0] ||
-                    //     item.enclosure?.[0]?.link ||
-                    //     item["media:thumbnail"]?.[0] ||
-                    //     item["media:content"]?.[0]?.["url"]?.[0] ||
-                    descriptionImage,
-                  }
+              item.thumbnail
+                ? { uri: item.thumbnail }
                 : require("../assets/image-not-found.webp")
             }
           />
