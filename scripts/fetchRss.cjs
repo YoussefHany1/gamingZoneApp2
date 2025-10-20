@@ -216,7 +216,7 @@ function extractSourcesFromDocData(data) {
 //     projectId: process.env.FIREBASE_PROJECT_ID,
 //   });
 // }
-// const db = admin.firestore();
+const db = admin.firestore();
 
 async function runFetchAll({ concurrency = 4, batchSize = 400 } = {}) {
   const summary = { sourcesProcessed: 0, articlesUpserted: 0, errors: [] };
