@@ -136,7 +136,7 @@ function normalizeItems(parsed) {
         "";
       const description =
         he
-          .decode(striptags(String(i.description)))
+          .decode(he.decode(striptags(String(i.description))))
           .replace(/\s+/g, " ")
           .trim() ||
         i.content ||
