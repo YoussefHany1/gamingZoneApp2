@@ -70,34 +70,28 @@ function safeId(input) {
 
 function extractThumbnail(i) {
   if (!i) return null;
-
-  // لو في تاق img داخل الـ description
-  const descImgMatch = he.encode(
-    String(i.description).match(
+  const decode = (v) => (v == null ? null : he.decode(String(v)));
+  const imgFromHtml = (h) => {
+    const m = String(h || "").match(
       /<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i
-    )
-  )?.[1];
-  const contentImgMatch = he.encode(
-    String(i.content).match(/<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i)
-  );
-  // نجرب أكثر من احتمال حسب أنواع RSS
+    );
+    return m ? decode(m[1]) : null;
+  };
+  const enc = (e) => {
+    if (!e) return null;
+    if (typeof e === "string") return decode(e);
+    if (Array.isArray(e)) return e.map(enc).find(Boolean) || null;
+    return decode(e.url || e.link || e["@url"] || e["#text"] || null);
+  };
 
   return (
-    i.thumbnail ||
-    i.thumbnail?.[0] ||
+    (Array.isArray(i.thumbnail) ? i.thumbnail[0] : i.thumbnail) ||
     i.image ||
-    i.enclosure?.url ||
-    i.enclosure?.[0]?.url ||
-    i.enclosure?.[0]?.["url"]?.[0] ||
-    i.enclosure?.[0]?.link ||
-    i["media:thumbnail"]?.url ||
-    i["media:thumbnail"]?.[0] ||
-    i["media:thumbnail"]?.[0]?.url ||
-    i["media:content"]?.url ||
-    i["media:content"]?.[0]?.url ||
-    i["media:content"]?.[0]?.["url"]?.[0] ||
-    descImgMatch ||
-    contentImgMatch ||
+    enc(i.enclosure) ||
+    enc(i.enclosures) ||
+    enc(i["media:thumbnail"]) ||
+    imgFromHtml(i.description) ||
+    imgFromHtml(i.content) ||
     null
   );
 }
