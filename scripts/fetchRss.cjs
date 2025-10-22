@@ -70,28 +70,34 @@ function safeId(input) {
 
 function extractThumbnail(i) {
   if (!i) return null;
-  const decode = (v) => (v == null ? null : he.decode(String(v)));
-  const imgFromHtml = (h) => {
-    const m = String(h || "").match(
-      /<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i
-    );
-    return m ? decode(m[1]) : null;
-  };
-  const enc = (e) => {
-    if (!e) return null;
-    if (typeof e === "string") return decode(e);
-    if (Array.isArray(e)) return e.map(enc).find(Boolean) || null;
-    return decode(e.url || e.link || e["@url"] || e["#text"] || null);
-  };
+
+  // لو في تاق img داخل الـ description
+  const descriptionImage = String(i.description).match(
+    /<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i
+  )?.[1];
+  const contentImage = he
+    .decode(String(i["content:encoded"]))
+    .match(/<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i)?.[1];
 
   return (
-    (Array.isArray(i.thumbnail) ? i.thumbnail[0] : i.thumbnail) ||
+    i.thumbnail ||
+    i.thumbnail?.[0] ||
     i.image ||
-    enc(i.enclosure) ||
-    enc(i.enclosures) ||
-    enc(i["media:thumbnail"]) ||
-    imgFromHtml(i.description) ||
-    imgFromHtml(i.content) ||
+    i.enclosure?.url ||
+    i.enclosure?.[0]?.url ||
+    i.enclosure?.[0]?.["url"]?.[0] ||
+    i.enclosure?.link ||
+    i.enclosure?.[0]?.link ||
+    i["media:thumbnail"] ||
+    i["media:thumbnail"]?.url ||
+    i["media:thumbnail"]?.[0] ||
+    i["media:thumbnail"]?.[0]?.url ||
+    i["media:content"]?.["$"]?.url ||
+    i["media:content"]?.url ||
+    i["media:content"]?.[0]?.url ||
+    i["media:content"]?.[0]?.["url"]?.[0] ||
+    descriptionImage ||
+    contentImage ||
     null
   );
 }
@@ -107,28 +113,15 @@ function normalizeItems(parsed) {
           (typeof i.link === "string" ? i.link : i.link._ || i.link.href)) ||
         (i.guid && (i.guid._ || i.guid)) ||
         null;
-      const title = i.title || "N/A";
+      const title = i.title && (typeof i.title === "string" ? i.title : "N/A");
       const description =
-        striptags(String(i.description)).replace(/\s+/g, " ").trim() ||
+        he
+          .decode(striptags(String(i.description)))
+          .replace(/\s+/g, " ")
+          .trim() ||
         i.content ||
         "";
       const pubDate = i.pubDate || i.pubdate || i["dc:date"] || null;
-      // const descriptionImage = he.encode(
-      //   String(i.description).match(
-      //     /<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i
-      //   )
-      // )?.[1];
-      // const thumbnail =
-      //   i.thumbnail ||
-      //   i.thumbnail?.[0] ||
-      //   i.image ||
-      //   i.enclosure?.[0]?.["url"]?.[0] ||
-      //   i.enclosure?.[0]?.link ||
-      //   i["media:thumbnail"]?.[0] ||
-      //   i["media:content"]?.[0]?.["url"]?.[0] ||
-      //   descriptionImage ||
-      //   null;
-
       items.push({
         title,
         link,
@@ -139,58 +132,6 @@ function normalizeItems(parsed) {
       });
     }
   }
-  // else if (parsed.feed && parsed.feed.entry) {
-  //   let it = parsed.feed.entry;
-  //   it = Array.isArray(it) ? it : [it];
-  //   for (const i of it) {
-  //     let link = null;
-  //     if (i.link) {
-  //       if (Array.isArray(i.link)) {
-  //         const alt = i.link.find((l) => l.rel === "alternate") || i.link[0];
-  //         link =
-  //           (alt &&
-  //             (alt.href || alt._ || (typeof alt === "string" ? alt : null))) ||
-  //           null;
-  //       } else {
-  //         link =
-  //           i.link.href ||
-  //           i.link._ ||
-  //           (typeof i.link === "string" ? i.link : null);
-  //       }
-  //     }
-  //     const title = i.title || "N/A";
-  //     const description =
-  //       he
-  //         .decode(he.decode(striptags(String(i.description))))
-  //         .replace(/\s+/g, " ")
-  //         .trim() ||
-  //       i.content ||
-  //       "";
-  //     const pubDate = i.pubDate || i.pubdate || i["dc:date"] || null;
-  //     const descriptionImage = String(i.description).match(
-  //       /<img[^>]+src=(?:'|"|)([^"' >]+)(?:'|"|)[^>]*>/i
-  //     )?.[1];
-  //     const thumbnail =
-  //       i.thumbnail ||
-  //       // i.thumbnail?.[0] ||
-  //       i.image ||
-  //       i.enclosure?.[0]?.["url"]?.[0] ||
-  //       i.enclosure?.[0]?.link ||
-  //       i["media:thumbnail"]?.[0] ||
-  //       i["media:content"]?.[0]?.["url"]?.[0] ||
-  //       descriptionImage ||
-  //       null;
-
-  //     items.push({
-  //       title,
-  //       link,
-  //       description,
-  //       pubDate: pubDate ? new Date(pubDate) : null,
-  //       thumbnail,
-  //       raw: i,
-  //     });
-  //   }
-  // }
   return items.filter((it) => it.link || it.guid);
 }
 
