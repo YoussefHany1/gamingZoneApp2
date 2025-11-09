@@ -60,49 +60,49 @@ function SettingsStack() {
 function App() {
   const [user, setUser] = useState(null);
 
-useEffect(() => {
-  const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      console.log("✅ User authenticated:", user.uid);
-      setUser(user);
-      try {
-        await initFcm(user.uid);
-      } catch (error) {
-        console.error("❌ Failed to initialize FCM:", error);
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        console.log("✅ User authenticated:", user.uid);
+        setUser(user);
+        try {
+          await initFcm(user.uid);
+        } catch (error) {
+          console.error("❌ Failed to initialize FCM:", error);
+        }
+      } else {
+        console.log("❌ User not authenticated, signing in anonymously...");
+        try {
+          await signInAnonymously(auth);
+        } catch (error) {
+          console.error("❌ Failed to sign in anonymously:", error);
+        }
       }
-    } else {
-      console.log("❌ User not authenticated, signing in anonymously...");
-      try {
-        await signInAnonymously(auth);
-      } catch (error) {
-        console.error("❌ Failed to sign in anonymously:", error);
-      }
-    }
-  });
+    });
 
-  return () => unsubscribeAuth();
-}, []);
+    return () => unsubscribeAuth();
+  }, []);
 
   const initFcm = async (userId) => {
     try {
       // Request OS notification permission (Android 13+ & iOS)
-      const expoPerms = await Notifications.requestPermissionsAsync({
-        ios: {
-          allowAlert: true,
-          allowBadge: true,
-          allowSound: true,
-          allowAnnouncements: true,
-        },
-      });
+      // const expoPerms = await Notifications.requestPermissionsAsync({
+      //   ios: {
+      //     allowAlert: true,
+      //     allowBadge: true,
+      //     allowSound: true,
+      //     allowAnnouncements: true,
+      //   },
+      // });
 
-      if (expoPerms.status !== "granted") {
-        console.log(
-          "❌ OS notification permission not granted:",
-          expoPerms.status
-        );
-        return;
-      }
-      console.log("✅ OS notification permission granted");
+      // if (expoPerms.status !== "granted") {
+      //   console.log(
+      //     "❌ OS notification permission not granted:",
+      //     expoPerms.status
+      //   );
+      //   return;
+      // }
+      // console.log("✅ OS notification permission granted");
 
       // Create notification channel for Android
       await Notifications.setNotificationChannelAsync("news_notifications", {

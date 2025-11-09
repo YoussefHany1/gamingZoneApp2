@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet } from "react-native";
+import { ScrollView, Text, StyleSheet } from "react-native";
 import { useState, useEffect } from "react";
 import { EpicFreeGames } from 'epic-free-games';
 import FreeGames from "../components/FreeGames";
-
-
+import GamesList from "../components/GamesList";
+import Loading from '../Loading'
 
 function GamesScreen() {
     const [data, setData] = useState(null);
@@ -30,14 +30,19 @@ function GamesScreen() {
     // console.log(data)
     return (
         <>
-            <View style={styles.container}>
-                <Text style={styles.header}>Get your free weekly game from Epic Games</Text>
+            <ScrollView style={styles.container}>
+
                 {loading ? (
-                    <Text style={{ color: 'white', textAlign: 'center' }}>Loading...</Text>
+                    <Loading />
                 ) : (
                     <FreeGames data={data} />
                 )}
-            </View>
+                <GamesList endpoint="/popular" />
+                <GamesList endpoint="/recently-released" />
+                <GamesList endpoint="/top-rated" />
+                <GamesList endpoint="/coming-soon" />
+                <GamesList endpoint="/most-anticipated" />
+            </ScrollView>
         </>
     );
 }
@@ -50,7 +55,6 @@ const styles = StyleSheet.create({
     },
     header: {
         color: "white",
-        // textAlign: "center"
         fontSize: 24,
         marginRight: 50,
         fontWeight: 500,

@@ -43,7 +43,8 @@ function FreeGames({ data }) {
     return (
         <>
             <View>
-                <ScrollView horizontal={true} style={styles.container}>
+                <Text style={styles.header}>Get your free weekly game from Epic Games</Text>
+                <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.container}>
                     {game.currentGames.map((item, index) => (
                         <TouchableOpacity key={index} style={styles.gameCard} onPress={() => {
                             Linking.openURL(`https://store.epicgames.com/en-US/p/${item.offerMappings?.[index]?.pageSlug}`)
@@ -54,14 +55,11 @@ function FreeGames({ data }) {
                                         uri: item.keyImages?.[2]?.url
                                     }
                                     : require("../assets/image-not-found.webp")
-                            } style={styles.image} />
+                            } style={styles.cover} resizeMode="cover" />
                             <Text style={styles.discout}>100%{"\n"}OFF</Text>
                             <Text style={styles.title}>{item.title}</Text>
                         </TouchableOpacity>
                     ))}
-                    {/* {<Text>        {days} يوم {hours.toString().padStart(2, "0")}:
-                        {minutes.toString().padStart(2, "0")}:
-                        {seconds.toString().padStart(2, "0")}</Text>} */}
                     {game.nextGames.map((item, index) => (
                         <TouchableOpacity key={index} style={styles.gameCard} onPress={() => {
                             Linking.openURL(`https://store.epicgames.com/en-US/p/${item.offerMappings?.[index]?.pageSlug}`)
@@ -94,7 +92,7 @@ function FreeGames({ data }) {
                                         uri: item.keyImages?.[2]?.url
                                     }
                                     : require("../assets/image-not-found.webp")
-                            } style={styles.image} />
+                            } style={styles.cover} resizeMode="cover" />
                             <Text style={styles.discout}>100%{"\n"}OFF</Text>
                             <Text style={styles.title}>{item.title}</Text>
                         </TouchableOpacity>
@@ -110,6 +108,7 @@ const styles = StyleSheet.create({
     container: {
         // flexDirection: "row"
     },
+    header: { fontSize: 28, color: 'white', margin: 12, fontWeight: 'bold', },
     overlay: {
         backgroundColor: "rgba(0, 0, 0, 0.85)",
         position: "absolute",
@@ -143,9 +142,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    image: {
-        width: 180,
-        height: 180,
+    cover: {
+        width: 150,
+        height: 150,
         borderRadius: 10,
     },
     title: {
@@ -161,7 +160,8 @@ const styles = StyleSheet.create({
         backgroundColor: "#516996",
         position: "absolute",
         textAlign: "center",
-        borderRadius: 16,
+        borderBottomLeftRadius: 16,
+        borderTopRightRadius: 16,
         padding: 7,
         top: 0,
         right: 0,

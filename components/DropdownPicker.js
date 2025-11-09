@@ -2,19 +2,18 @@ import { useState, useEffect } from "react";
 import {
   View,
   Text,
-  Pressable,
+  TouchableOpacity,
   Modal,
   FlatList,
   Image,
   StyleSheet,
-  TouchableOpacity,
-  Platform,
+  Linking,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase.js";
 
 const docRef = collection(db, "rss");
-// console.log("Listening to Firestore document...");
 let rssFeeds = [];
 
 onSnapshot(
@@ -99,20 +98,19 @@ const DropdownPicker = (props) => {
 
   return (
     <View style={styles.wrapper}>
-      <Pressable
+      <TouchableOpacity
         style={styles.button}
         onPress={() => setOpen(true)}
         accessibilityRole="button"
-        accessibilityLabel={`Open picker. Selected: ${
-          selected?.name ?? "none"
-        }`}
+        accessibilityLabel={`Open picker. Selected: ${selected?.name ?? "none"
+          }`}
       >
         <View style={styles.dropdownButton}>
           <Image source={{ uri: selected?.image }} style={styles.avatar} />
           <Text style={styles.buttonText}>{selected?.name}</Text>
         </View>
         <Text style={styles.chev}>▾</Text>
-      </Pressable>
+      </TouchableOpacity>
 
       <Modal
         visible={open}
@@ -121,7 +119,7 @@ const DropdownPicker = (props) => {
         onRequestClose={() => setOpen(false)}
       >
         {/* هنا نضع overlay كعنصر منفصل لكي لا يلتقط اللمسات داخل صندوق القائمة */}
-        <Pressable style={styles.overlay} onPress={() => setOpen(false)} />
+        <TouchableOpacity style={styles.overlay} onPress={() => setOpen(false)} />
         <View style={styles.dropdownContainer}>
           <FlatList
             data={websites}
@@ -132,6 +130,14 @@ const DropdownPicker = (props) => {
           />
         </View>
       </Modal>
+      <View style={styles.siteDesc}>
+        <Image source={{ uri: selected?.image }} style={styles.siteImg} />
+        <View style={styles.siteText}>
+          <Text style={styles.siteName}>{selected.name}</Text>
+          <Text style={styles.siteAbout}>{selected.aboutSite}</Text>
+          {selected.language === "ar" ? <TouchableOpacity onPress={() => Linking.openURL(selected.website)} style={styles.visitSiteBtn}><Text style={styles.visitSite}>زور الموقع <Ionicons name="arrow-up-right-box-outline" size={18} color="white" /></Text></TouchableOpacity> : <TouchableOpacity onPress={() => Linking.openURL(selected.website)} style={styles.visitSiteBtn}><Text style={styles.visitSite}>Visit Website <Ionicons name="arrow-up-right-box-outline" size={18} color="white" /></Text></TouchableOpacity>}
+        </View>
+      </View>
     </View>
   );
 };
@@ -139,7 +145,6 @@ const DropdownPicker = (props) => {
 const styles = StyleSheet.create({
   wrapper: {
     alignItems: "center",
-    paddingTop: 10,
     paddingBottom: 20,
   },
   button: {
@@ -158,7 +163,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     alignItems: "center",
-    color: "#ffffff",
+    color: "#fff",
     fontSize: 14,
     flexShrink: 1,
   },
@@ -185,18 +190,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
     paddingVertical: 6,
-    // Shadow (iOS/Android)
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOpacity: 0.4,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 3 },
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
+    elevation: 6,
   },
 
   option: {
@@ -243,6 +237,40 @@ const styles = StyleSheet.create({
   separator: {
     height: 6,
   },
+  siteDesc: {
+    flexDirection: "row-reverse",
+    marginTop: 20
+  },
+  siteImg: {
+    width: 100,
+    height: 100,
+    borderRadius: 50
+  },
+  siteText: {
+    marginHorizontal: 10
+  },
+  siteName: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 28
+  },
+  siteAbout: {
+    color: "white",
+    width: 250
+  },
+  visitSiteBtn: {
+    color: "white",
+    backgroundColor: "#516996",
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginTop: 12,
+  },
+  visitSite: {
+    color: "white",
+    fontWeight: "bold"
+  }
 });
 
 export default DropdownPicker;

@@ -34,24 +34,15 @@ function Slideshow() {
               style={styles.thumbnail}
               source={
                 item.thumbnail
-                  ? // item.image ||
-                    // item.enclosure?.[0]?.["url"]?.[0] ||
-                    // item.enclosure?.[0]?.link ||
-                    // item["media:thumbnail"]?.[0] ||
-                    // item["media:content"]?.[0]?.["url"]?.[0]
-                    {
-                      uri: item.thumbnail,
-                      // item.image ||
-                      // item.enclosure?.[0]?.["url"]?.[0] ||
-                      // item.enclosure?.[0]?.link ||
-                      // item["media:thumbnail"]?.[0] ||
-                      // item["media:content"]?.[0]?.["url"]?.[0],
-                    }
+                  ?
+                  {
+                    uri: item.thumbnail,
+                  }
                   : require("../assets/image-not-found.webp")
               }
             />
             <LinearGradient
-              colors={["transparent", "#0c1a33"]} // From Black to Transparent
+              colors={["transparent", "#0c1a33"]}
               style={styles.gradient}
             />
             <Text style={styles.headline}>{item.title.substring(0, 100)}</Text>

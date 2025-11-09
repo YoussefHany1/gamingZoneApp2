@@ -4,15 +4,14 @@ import {
   StyleSheet,
   FlatList,
   Image,
-  Pressable,
-  Linking,
+  TouchableOpacity,
   RefreshControl,
 } from "react-native";
 import useFeed from "../hooks/useFeed";
 import DropdownPicker from "../components/DropdownPicker";
-// import striptags from "striptags";
 import Loading from "../Loading";
-
+import NewsDetails from "../screens/NewsDetailsScreen";
+import { useState } from "react";
 function fromSnakeCase(input) {
   return input
     .split("_")
@@ -20,28 +19,26 @@ function fromSnakeCase(input) {
     .join(" ");
 }
 
-function LatestNews(props) {
-  const limit = props.limit;
-  const language = props.language;
-  const category = props.category;
-  const website = props.website;
+function LatestNews({ limit, language, category, website, selectedItem, onChangeFeed, showDropdown }) {
   const { articles, loading, error, refreshing, onRefresh } = useFeed(
     category,
     website
   );
-  // Debug: Log the language value
+
   const listData =
     typeof limit === "number" ? articles.slice(0, limit) : articles;
+  const [activeModal, setActiveModal] = useState(false);
   const renderItem = ({ item }) => {
     return (
-      <Pressable
+      <TouchableOpacity
         style={styles.NewsContainer}
         android_ripple={{ color: "#516996" }}
         onPress={() => {
-          // Open the link in a web browser
-          Linking.openURL(item.link[0]);
+          setActiveModal(`${item.id}`)
         }}
       >
+        <NewsDetails article={item} visible={activeModal === `${item.id}`} onClose={() => setActiveModal(null)} />
+
         <View style={styles.textContainer}>
           <Text style={styles.headline}>{item.title.substring(0, 100)}</Text>
           <Text style={styles.par}>{item.description.substring(0, 60)}..</Text>
@@ -56,22 +53,22 @@ function LatestNews(props) {
                 : require("../assets/image-not-found.webp")
             }
           />
-          <Text style={styles.website}>{fromSnakeCase(props.website)}</Text>
+          <Text style={styles.website}>{fromSnakeCase(website)}</Text>
         </View>
-      </Pressable>
+      </TouchableOpacity>
     );
   };
 
   const renderHeader = () => (
     <>
-      <Text style={styles.header}>Latest {props.category}</Text>
-      {props.showDropdown !== false && (
+      <Text style={styles.header}>Latest {category.charAt(0).toUpperCase() + category.slice(1)}</Text>
+      {showDropdown !== false && (
         <DropdownPicker
-          category={props.category}
-          value={props.selectedItem}
+          category={category}
+          value={selectedItem}
           onChange={(item) => {
-            if (typeof props.onChangeFeed === "function") {
-              props.onChangeFeed(item);
+            if (typeof onChangeFeed === "function") {
+              onChangeFeed(item);
             }
           }}
         />
@@ -109,13 +106,6 @@ function LatestNews(props) {
 export default LatestNews;
 
 const styles = StyleSheet.create({
-  container: {
-    // flex: 1,
-    // alignItems: "center",
-    // justifyContent: "center",
-    // backgroundColor: "#0c1a33",
-    // marginBottom: 30,
-  },
   header: {
     textAlign: "center",
     alignSelf: "center",
@@ -130,42 +120,28 @@ const styles = StyleSheet.create({
   },
   NewsContainer: {
     alignItems: "center",
-    // justifyContent: "center",
-    // alignContent: "center",
-    // alignSelf: "center",
     flexDirection: "row",
-    // width: 350,
-    // marginLeft: 80,
-    // marginRight: 80,
     borderRadius: 16,
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: "#4a5565",
   },
   textContainer: {
-    // flex: 1,
-    // marginRight: 15,
     width: "65%",
   },
   headline: {
     fontSize: 15,
     fontWeight: "bold",
     marginBottom: 12,
-    // marginLeft: 110,
-    // Width: "5%",
     color: "white",
   },
   par: {
     fontSize: 12,
-    // maxWidth: 180,
-    // marginLeft: 110,
     color: "#b7becb",
   },
   thumbnail: {
     width: 135,
     height: 100,
-    // marginLeft: 10,
-    // marginRight: 70,
     borderRadius: 16,
   },
   website: {
