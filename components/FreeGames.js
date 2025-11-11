@@ -57,7 +57,7 @@ function FreeGames({ data }) {
                                     : require("../assets/image-not-found.webp")
                             } style={styles.cover} resizeMode="cover" />
                             <Text style={styles.discout}>100%{"\n"}OFF</Text>
-                            <Text style={styles.title}>{item.title}</Text>
+                            <Text style={styles.title} numberOfLines={3}>{item.title}</Text>
                         </TouchableOpacity>
                     ))}
                     {game.nextGames.map((item, index) => (

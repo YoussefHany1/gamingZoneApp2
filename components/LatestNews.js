@@ -41,7 +41,7 @@ function LatestNews({ limit, language, category, website, selectedItem, onChange
 
         <View style={styles.textContainer}>
           <Text style={styles.headline}>{item.title.substring(0, 100)}</Text>
-          <Text style={styles.par}>{item.description.substring(0, 60)}..</Text>
+          <Text numberOfLines={2} style={styles.par}>{item.description}..</Text>
         </View>
 
         <View>
@@ -138,6 +138,7 @@ const styles = StyleSheet.create({
   par: {
     fontSize: 12,
     color: "#b7becb",
+    marginRight: 12
   },
   thumbnail: {
     width: 135,

@@ -7,16 +7,16 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import GameDetails from "./GameDetails"
+import GameDetails from "./GameDetails.js"
 import Loading from '../Loading'
 
-const SERVER_URL = 'http://192.168.1.100:3000';
+const SERVER_URL = 'http://192.168.1.102:3000';
 
 export default function GamesList({ endpoint }) {
   const [loading, setLoading] = useState(true);
   const [games, setGames] = useState([]);
   const [error, setError] = useState(null);
-
+  const [selectedGameId, setSelectedGameId] = useState(null);
   useEffect(() => {
     fetchGames(endpoint);
   }, [endpoint]);
@@ -58,10 +58,9 @@ export default function GamesList({ endpoint }) {
   };
   const [activeModal, setActiveModal] = useState(false);
   const renderGame = ({ item }) => (
-    <TouchableOpacity style={styles.gameCard} onPress={() => {
-      setActiveModal(`${item.id}`)
-    }}>
-      <GameDetails game={item} visible={activeModal === `${item.id}`} onClose={() => setActiveModal(null)} />
+    <TouchableOpacity style={styles.gameCard} onPress={() => setSelectedGameId(item.id)
+    }>
+
       <Image
         source={item.cover ? { uri: `https://images.igdb.com/igdb/image/upload/t_cover_big/${item.cover.image_id}.jpg` } : require("../assets/image-not-found.webp")}
         style={styles.cover}
@@ -92,6 +91,12 @@ export default function GamesList({ endpoint }) {
           showsHorizontalScrollIndicator={false}
         />
       )}
+
+      <GameDetails
+        gameID={selectedGameId}
+        visible={selectedGameId !== null}
+        onClose={() => setSelectedGameId(null)}
+      />
     </View>
   );
 }
@@ -123,7 +128,6 @@ const styles = StyleSheet.create({
   },
   rating: {
     color: "white",
-    // backgroundColor: "#516996",
     position: "absolute",
     textAlign: "center",
     borderBottomLeftRadius: 16,

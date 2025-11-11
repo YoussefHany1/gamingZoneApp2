@@ -256,12 +256,6 @@ function App() {
               //       { overflow: "hidden", borderRadius: 70 },
               //     ]}
               //   >
-              //     <BlurView
-              //       tint="dark"
-              //       experimentalBlurMethod="dimezisBlurView"
-              //       intensity={70}
-              //       style={StyleSheet.absoluteFill}
-              //     />
               //   </View>
               // ),
               tabBarActiveTintColor: "#779bdd",

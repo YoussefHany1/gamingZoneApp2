@@ -45,7 +45,7 @@ function Slideshow() {
               colors={["transparent", "#0c1a33"]}
               style={styles.gradient}
             />
-            <Text style={styles.headline}>{item.title.substring(0, 100)}</Text>
+            <Text style={styles.headline} numberOfLines={3}>{item.title}</Text>
           </Pressable>
         ))}
       </Swiper>
