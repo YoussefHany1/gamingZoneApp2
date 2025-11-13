@@ -1,4 +1,3 @@
-// screens/GameDetailsScreen.js
 import React, { useEffect, useState, useRef } from "react";
 import { TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET } from '@env';
 import {
@@ -10,8 +9,8 @@ import {
     ScrollView,
     TouchableOpacity,
     Linking,
-    Modal,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import YoutubePlayer from "react-native-youtube-iframe";
@@ -72,11 +71,12 @@ async function fetchGameById(id) {
     return Array.isArray(json) && json.length ? json[0] : null;
 }
 
-function GameDetails({ gameID, visible, onClose }) {
+function GameDetails({ route, navigation }) {
+    const { gameID: initialGameID } = route.params; // جلب الـ ID من الـ route
     const [game, setGame] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [currentId, setCurrentId] = useState(gameID);
+    const [currentId, setCurrentId] = useState(initialGameID); // استخدام الـ ID المبدئي
     const mountedRef = useRef(true);
     const scrollRef = useRef(null);
 
@@ -87,15 +87,14 @@ function GameDetails({ gameID, visible, onClose }) {
         };
     }, []);
 
-    // لو الأب غيّر gameID نزامن
     useEffect(() => {
-        if (gameID && gameID !== currentId) {
-            setCurrentId(gameID);
+        if (initialGameID && initialGameID !== currentId) {
+            setCurrentId(initialGameID);
         }
-    }, [gameID]);
+    }, [initialGameID]);
 
     useEffect(() => {
-        if (!visible) return; // لو المودال مقفول مفيش داعي نجلب
+        // تم إزالة الشرط (if !visible)
         if (!currentId) {
             setError("No game ID provided");
             setGame(null);
@@ -131,7 +130,7 @@ function GameDetails({ gameID, visible, onClose }) {
         return () => {
             cancelled = true;
         };
-    }, [visible, currentId]);
+    }, [currentId]);
 
     function getRatingColor(rating) {
         if (rating <= 2) return "#8B0000";
@@ -165,16 +164,13 @@ function GameDetails({ gameID, visible, onClose }) {
     }
     console.log(images);
     return (
-        <Modal
-            animationType="slide"
-            visible={visible}
-            onRequestClose={onClose}
-            transparent={false}
-            style={styles.modalContainer}
+        <SafeAreaView
+            edges={['right', 'bottom', 'left']}
+            style={styles.container}
         >
             <View style={styles.header}>
-                <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                    <Ionicons name="close" size={28} color="#fff" />
+                <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={28} color="#fff" />
                 </TouchableOpacity>
             </View>
 
@@ -214,13 +210,13 @@ function GameDetails({ gameID, visible, onClose }) {
                     <View style={styles.backgroundContainer}>
                         <LinearGradient
                             colors={["transparent", "#0c1a33"]}
-                            style={[styles.gradient, styles.leftGradient]}
+                            style={styles.gradient}
                             start={{ x: 1, y: 0.5 }}
                             end={{ x: 0, y: 0.5 }}
                         />
                         <LinearGradient
                             colors={["#0c1a33", "transparent"]}
-                            style={[styles.gradient, styles.rightGradient]}
+                            style={styles.gradient}
                             start={{ x: 1, y: 0.5 }}
                             end={{ x: 0, y: 0.5 }}
                         />
@@ -403,9 +399,6 @@ function GameDetails({ gameID, visible, onClose }) {
                                             style={styles.similarCard}
                                             onPress={() => {
                                                 setCurrentId(sg.id);
-                                                if (typeof onSelectGame === "function") {
-                                                    onSelectGame(sg.id);
-                                                }
                                             }}
                                         >
                                             <Image
@@ -426,27 +419,24 @@ function GameDetails({ gameID, visible, onClose }) {
                         )}
                     </View>
 
-                    <ImageBackground
+                    <ImageBackground blurRadius={2}
                         source={
                             game.cover.image_id ? { uri: `https://images.igdb.com/igdb/image/upload/t_720p/${game.cover.image_id}.jpg` } : null
                         }
-                        style={{ height: "100%", width: "100%", opacity: .2, position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: -100, backgroundColor: "#0c1a33", marginTop: 350 }} imageStyle={{
+                        style={{ height: "100%", width: "100%", opacity: .4, position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: -100, backgroundColor: "#0c1a33", marginTop: 350 }} imageStyle={{
                             resizeMode: "cover",
                         }}
                     />
                 </ScrollView>
             )}
-        </Modal>
+        </SafeAreaView>
     );
 }
 
 export default GameDetails;
 
-// styles كما عندك أعلاه (لا تغيير)
-
-
 const styles = StyleSheet.create({
-    modalContainer: {
+    container: {
         flex: 1,
         backgroundColor: "#0c1a33",
     },
@@ -456,7 +446,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: 0,
         width: "100%",
-        height: "100%",
+        height: "100%"
     },
     gradient: {
         height: "100%",
@@ -466,7 +456,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         width: 40,
         height: 40,
-        top: 30,
+        top: 50,
         left: 10,
         zIndex: 1000,
     },
@@ -474,14 +464,11 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: "rgba(81, 105, 150, 0.3)",
+        backgroundColor: "rgba(81, 105, 150, 0.4)",
         justifyContent: "center",
         alignItems: "center",
     },
-    container: {
-        flex: 1,
-        backgroundColor: "#0c1a33",
-    },
+
     image: {
         width: "100%",
         height: 350,

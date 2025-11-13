@@ -1,15 +1,10 @@
-// screens/NewsDetailsScreen.js
 import {
   View,
   Text,
   StyleSheet,
-  Image,
-  ScrollView,
-  Pressable,
-  Linking,
-  Modal,
   TouchableOpacity
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import Notification from "../components/Notification";
@@ -19,7 +14,7 @@ function SettingsScreen() {
 
   return (
     <>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <TouchableOpacity
           style={styles.categoryHeader}
           onPress={() => setNotificationModal(true)}
@@ -83,7 +78,7 @@ function SettingsScreen() {
             <Text style={styles.categoryTitle}>Feedback</Text>
           </View>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
 
     </>
   );
@@ -91,10 +86,9 @@ function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#0c1a33",
     flex: 1,
+    backgroundColor: "#0c1a33",
     paddingHorizontal: 16,
-    paddingTop: 70,
   },
   categoryHeader: {
     marginVertical: 15,

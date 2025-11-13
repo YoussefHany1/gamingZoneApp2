@@ -57,7 +57,7 @@ export default Slideshow;
 const styles = StyleSheet.create({
   swiper: {
     height: 400,
-    // marginBottom: 20,
+    marginBottom: 30,
   },
   thumbnail: {
     // flex: 1,

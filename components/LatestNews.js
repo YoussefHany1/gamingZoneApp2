@@ -106,6 +106,9 @@ function LatestNews({ limit, language, category, website, selectedItem, onChange
 export default LatestNews;
 
 const styles = StyleSheet.create({
+  container: {
+    marginBottom: 40
+  },
   header: {
     textAlign: "center",
     alignSelf: "center",
@@ -114,7 +117,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#516996",
     paddingHorizontal: 80,
     paddingVertical: 10,
-    marginVertical: 30,
+    marginBottom: 30,
     borderRadius: 16,
     color: "white",
   },

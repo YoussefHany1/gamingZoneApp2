@@ -1,5 +1,5 @@
-import { StatusBar } from "expo-status-bar";
-import { FlatList } from "react-native";
+import { FlatList, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Slideshow from "../components/Slideshow";
 import LatestNews from "../components/LatestNews";
 // import Loading from "../Loading";
@@ -32,15 +32,20 @@ function Home() {
 
   return (
     <>
-      <FlatList
-        data={sections}
-        renderItem={renderItem}
-        style={{ flex: 1, backgroundColor: "#0c1a33" }}
-        showsVerticalScrollIndicator={false}
-      />
-      <StatusBar style="auto" />
+      <SafeAreaView edges={['right', 'bottom', 'left']} style={styles.container}>
+        <FlatList
+          data={sections}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
     </>
   );
 }
 export default Home;
-// const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0c1a33",
+  },
+});

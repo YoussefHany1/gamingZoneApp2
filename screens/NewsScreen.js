@@ -1,5 +1,6 @@
 import * as React from "react";
-import { View, useWindowDimensions, StyleSheet, Text } from "react-native";
+import { useWindowDimensions, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { TabView, SceneMap, TabBar } from "react-native-tab-view";
 import LatestNews from "../components/LatestNews.js";
 import { collection, onSnapshot } from "firebase/firestore";
@@ -28,9 +29,9 @@ onSnapshot(
 
 function normalized(input) {
   return input
-    .replace(/[^\p{L}\p{N}]+/gu, " ") // أي شيء ليس حرف أو رقم -> مسافة
-    .trim() // إزالة المسافات من الأطراف
-    .replace(/\s+/g, "_") // كل مجموعة مسافات -> underscore
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim()
+    .replace(/\s+/g, "_")
     .toLowerCase();
 }
 
@@ -145,58 +146,64 @@ export default function TabViewExample() {
   });
 
   return (
-    <TabView
-      navigationState={{ index, routes }}
-      renderScene={renderScene}
-      onIndexChange={setIndex}
-      initialLayout={{ width: layout.width }}
-      renderTabBar={(props) => (
-        <TabBar
-          {...props}
-          style={styles.tabBar}
-          indicatorStyle={styles.tabIndicator}
-          labelStyle={styles.tabLabel}
-          activeColor="#516996"
-          inactiveColor="#a9b7d0"
-        />
-      )}
-    />
+    <SafeAreaView style={styles.container}>
+      <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{ width: layout.width }}
+        renderTabBar={(props) => (
+          <TabBar
+            {...props}
+            style={styles.tabBar}
+            indicatorStyle={styles.tabIndicator}
+            labelStyle={styles.tabLabel}
+            activeColor="#516996"
+            inactiveColor="#a9b7d0"
+          />
+        )}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#00001c"
+  },
   scene: {
     flex: 1,
+    backgroundColor: "#0c1a33",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0c1a33",
+    paddingTop: 40,
   },
   standaloneContainer: {
     flex: 1,
     backgroundColor: "#0c1a33",
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
+    padding: 16
   },
   standaloneTitle: {
     color: "#ffffff",
     fontSize: 24,
     fontWeight: "700",
-    marginBottom: 8,
+    marginBottom: 8
   },
   standaloneSubtitle: {
     color: "#a9b7d0",
-    fontSize: 14,
+    fontSize: 14
   },
   tabBar: {
-    backgroundColor: "#0a0f1c",
-    paddingTop: 50,
+    backgroundColor: "#0a0f1c"
   },
   tabIndicator: {
-    backgroundColor: "#516996",
+    backgroundColor: "#516996"
   },
   tabLabel: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "600"
   },
 });

@@ -1,4 +1,3 @@
-// screens/NewsDetailsScreen.js
 import {
     View,
     Text,
@@ -19,7 +18,7 @@ function NewsDetails({ article, visible, onClose }) {
             backdropColor="#0c1a33"
             visible={visible}
             onRequestClose={onClose} style={styles.modalContainer}>
-            {/* زرار إغلاق في الأعلى */}
+            {/* Close Button */}
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.closeButton}
@@ -57,7 +56,7 @@ function NewsDetails({ article, visible, onClose }) {
                         onPress={() => Linking.openURL(article.link)}
                     >
                         <Ionicons name="open-outline" size={20} color="white" style={{ marginRight: 8 }} />
-                        <Text style={styles.buttonText}>اقرأ المقال كاملاً</Text>
+                        <Text style={styles.buttonText}>Read the full article</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>

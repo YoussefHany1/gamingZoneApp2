@@ -37,6 +37,9 @@ yarn-error.*
 *.tsbuildinfo
 
 *serviceAccountKey.json
-
+google-services.json
+firebase.json
+firebase.js
+firestore.rules
 # firebase
 firebase-*.json

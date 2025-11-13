@@ -1,15 +1,14 @@
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-// import { StyleSheet, View } from "react-native";
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-// import { BlurView } from "expo-blur";
 import HomeScreen from "./screens/HomeScreen";
 import NewsScreen from "./screens/NewsScreen";
 import GamesScreen from "./screens/GamesScreen";
 import SettingsScreen from "./screens/SettingsScreen";
+import GameDetails from "./components/GameDetails";
 import { useEffect, useState } from "react";
 import messaging from "@react-native-firebase/messaging";
 import * as Notifications from "expo-notifications";
@@ -45,6 +44,7 @@ function GamesStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="GamesScreen" component={GamesScreen} />
+      <Stack.Screen name="GameDetails" component={GameDetails} />
     </Stack.Navigator>
   );
 }
@@ -222,79 +222,46 @@ function App() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#0c1a33' }} edges={['right', 'bottom', 'left']}>
-        <StatusBar style="light" translucent={true} />
-        <NavigationContainer>
-          <Tab.Navigator
-            screenOptions={({ route }) => ({
-              headerShown: false,
-              tabBarStyle: {
-                position: "absolute",
-                // bottom: 20,
-                left: "15%",      // يضمن أن الـ bar يكون في المنتصف
-                right: "15%",     // نفس المسافة من الجانبين
-                height: 60,
-                borderRadius: 30,
-                backgroundColor: "rgba(9, 9, 44, 0.6)",
-                borderWidth: 0,
-                borderTopWidth: 0,
-                // borderColor: "#040d1b",
-                // تظليل
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.15,
-                shadowRadius: 10,
-                elevation: 8,
-                alignSelf: "center",
-                alignItems: "center",
-                alignContent: "center",
-              },
-              // tabBarBackground: () => (
-              //   <View
-              //     style={[
-              //       StyleSheet.absoluteFill,
-              //       { overflow: "hidden", borderRadius: 70 },
-              //     ]}
-              //   >
-              //   </View>
-              // ),
-              tabBarActiveTintColor: "#779bdd",
-              tabBarInactiveTintColor: "#779bdd",
-              tabBarIcon: ({ focused, color, size }) => {
-                let iconName;
+      <StatusBar style="light" translucent={true} />
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            headerShown: false,
+            tabBarStyle: {
+              position: "absolute",
+              backgroundColor: "#00001c",
+              borderWidth: 0,
+              borderTopWidth: 0,
+              paddingTop: 5,
+              alignItems: "center",
+            },
+            tabBarActiveTintColor: "#779bdd",
+            tabBarInactiveTintColor: "#779bdd",
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName;
 
-                if (route.name === "Home") {
-                  iconName = focused ? "home" : "home-outline";
-                } else if (route.name === "News") {
-                  iconName = focused ? "newspaper" : "newspaper-outline";
-                } else if (route.name === "Settings") {
-                  iconName = focused ? "settings" : "settings-outline";
-                } else if (route.name === "Games") {
-                  iconName = focused ? "game-controller" : "game-controller-outline";
-                }
+              if (route.name === "Home") {
+                iconName = focused ? "home" : "home-outline";
+              } else if (route.name === "News") {
+                iconName = focused ? "newspaper" : "newspaper-outline";
+              } else if (route.name === "Settings") {
+                iconName = focused ? "settings" : "settings-outline";
+              } else if (route.name === "Games") {
+                iconName = focused ? "game-controller" : "game-controller-outline";
+              }
 
-                return <Ionicons name={iconName} size={size} color={color} />;
-              },
-            })}
-          >
-            <Tab.Screen name="Home" component={HomeStack} />
-            <Tab.Screen name="News" component={NewsStack} />
-            <Tab.Screen name="Games" component={GamesStack} />
-            <Tab.Screen name="Settings" component={SettingsStack} />
-          </Tab.Navigator>
-        </NavigationContainer>
-      </SafeAreaView>
+              return <Ionicons name={iconName} size={size} color={color} />;
+            },
+          })}
+        >
+          <Tab.Screen name="Home" component={HomeStack} />
+          <Tab.Screen name="News" component={NewsStack} />
+          <Tab.Screen name="Games" component={GamesStack} />
+          <Tab.Screen name="Settings" component={SettingsStack} />
+        </Tab.Navigator>
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     borderRadius: 30,
-//     flex: 1,
-//     width: "100%",
-//     backgroundColor: "#0c1a33",
-//   },
-// });
 
 export default App;

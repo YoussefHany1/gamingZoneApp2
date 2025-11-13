@@ -7,16 +7,17 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import GameDetails from "./GameDetails.js"
 import Loading from '../Loading'
+import { useNavigation } from '@react-navigation/native';
 
 const SERVER_URL = 'http://192.168.1.102:3000';
 
 export default function GamesList({ endpoint }) {
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [games, setGames] = useState([]);
   const [error, setError] = useState(null);
-  const [selectedGameId, setSelectedGameId] = useState(null);
+
   useEffect(() => {
     fetchGames(endpoint);
   }, [endpoint]);
@@ -56,9 +57,9 @@ export default function GamesList({ endpoint }) {
     if (rating <= 8) return '#71e047';
     return '#006400';
   };
-  const [activeModal, setActiveModal] = useState(false);
+
   const renderGame = ({ item }) => (
-    <TouchableOpacity style={styles.gameCard} onPress={() => setSelectedGameId(item.id)
+    <TouchableOpacity style={styles.gameCard} onPress={() => navigation.navigate('GameDetails', { gameID: item.id })
     }>
 
       <Image
@@ -91,12 +92,6 @@ export default function GamesList({ endpoint }) {
           showsHorizontalScrollIndicator={false}
         />
       )}
-
-      <GameDetails
-        gameID={selectedGameId}
-        visible={selectedGameId !== null}
-        onClose={() => setSelectedGameId(null)}
-      />
     </View>
   );
 }
